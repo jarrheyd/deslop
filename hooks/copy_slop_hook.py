@@ -120,6 +120,18 @@ BANNED_PHRASES = [
     (r"(?i)\bstands?\s+as\s+a\s+testament\s+to\b", "puffery: 'stands as a testament to' - show it, do not proclaim it"),
     (r"(?i)\bmark(?:s|ing|ed)?\s+a\s+pivotal\s+moment\b", "puffery: 'marks a pivotal moment' - overstatement"),
     (r"(?i)\b(?:cement(?:ed|ing|s)?|solidif(?:ied|ying|ies))\s+(?:its|his|her|their)\s+(?:legacy|status|place|role|position)\b", "puffery: 'cemented its legacy/status' - AI significance-inflation"),
+
+    # Vague / landing metaphors (2026-08-27, "here's where it lands" kind of thing)
+    (r"(?i)\b(?:here'?s|there'?s|that'?s|this\s+is)\s+where\s+(?:it|that|this|things|we|they|everything|the\s+\w+)\s+(?:lands?|comes?\s+in|shines?|matters?|begins?|happens?|gets\s+\w+)\b",
+     "vague landing metaphor: 'here's where it lands / comes in / shines' - say the concrete thing"),
+    (r"(?i)\bwhere\s+(?:it|everything|the\s+magic|the\s+rubber)\s+(?:lands?|happens?|meets\s+the\s+road)\b",
+     "dead metaphor: 'where it lands / where the magic happens / where the rubber meets the road' - name the actual thing"),
+    (r"(?i)\bmoves?\s+the\s+needle\b", "dead metaphor: 'moves the needle' - state the actual effect"),
+    (r"(?i)\bthe\s+missing\s+piece\b", "dead metaphor: 'the missing piece' - name what is actually missing"),
+    (r"(?i)\bthe\s+right\s+lever\b", "dead metaphor: 'the right lever' - name the actual action"),
+    (r"(?i)\bat\s+the\s+end\s+of\s+the\s+day\b", "filler: 'at the end of the day' - cut it, state the point"),
+    (r"(?i)\bthe\s+name\s+of\s+the\s+game\b", "cliche: 'the name of the game' - say the actual priority"),
+    (r"(?i)\bwhen\s+it\s+comes\s+to\b", "filler opener: 'when it comes to' - start with the point"),
 ]
 
 # ============================================================

@@ -1,6 +1,6 @@
 # deslop
 
-A quality gate for [Claude Code](https://docs.claude.com/en/docs/claude-code) that catches AI tells **before they ship** - the words, phrases, and visual patterns that read as machine-made.
+An AI-slop quality gate. It catches the words, phrases, and visual patterns that read as machine-made, before they ship - whoever or whatever wrote them.
 
 Not a style guide. A bullshit detector.
 
@@ -10,13 +10,13 @@ deslop removes AI tells. That is the whole intent. It does **not** teach voice, 
 
 ## What it does
 
-Three parts:
+Two checkers and a skill:
 
-1. **Copy hook** (`hooks/copy_slop_hook.py`) - a `PreToolUse` hook on every `Write`/`Edit`/`MultiEdit` to prose (`.md`, `.mdx`, `.txt`, `.html`, and string literals in `.tsx`/`.jsx`/`.ts`/`.js`/`.py`). Catches AI copy tells before the text lands on disk.
-2. **Design hook** (`hooks/design_slop_hook.py`) - a `PreToolUse` hook on `.html`/`.css`/`.scss`/`.tsx`/`.jsx`/`.vue`/`.svelte`. Catches AI-default *visual* tells in the source.
-3. **The skill** (`SKILL.md` + `references/` + `agents/`) - invoke it for a full review, with the pattern catalogs, a slop-detector agent, and a copy-humanizer agent.
+1. **Copy checker** (`hooks/copy_slop_hook.py`) - reads prose and blocks AI copy tells.
+2. **Design checker** (`hooks/design_slop_hook.py`) - reads HTML/CSS/JSX and blocks AI-default *visual* tells.
+3. **The skill** (`SKILL.md` + `references/` + `agents/`) - invoke it for a full manual review, with the pattern catalogs, a slop-detector agent, and a copy-humanizer agent.
 
-**Everything blocks.** There is no warn tier: a tell stops the write and explains itself, so you fix it instead of shipping it. Bypass a session with `DISABLE_ANTI_SLOP_HOOK=1`.
+Both checkers are plain Python: they read a file and exit `0` (clean) or `2` (slop found). That makes them usable as an editor hook, a git pre-commit hook, a CI step, or a call from any agent. **Everything blocks** - there is no warn tier. Bypass a run with `DISABLE_ANTI_SLOP_HOOK=1`.
 
 ### A sample of what's caught
 
@@ -25,12 +25,13 @@ Copy:
 | Tell |
 |---|
 | Banned phrases (the "fast-paced world" / "not just X, it's Y" / "unlock the power of" family) |
+| Vague / landing metaphors ("here's where it lands", "where the magic happens", "moves the needle", "at the end of the day") |
 | AI tool-remnant markers (ChatGPT/Gemini citation artifacts left in text) |
-| Chatbot outros ("I hope this helps", "feel free to reach out", "any questions") |
+| Chatbot outros ("I hope this helps", "feel free to reach out") |
 | Significance/legacy puffery ("stands as a testament", "pivotal moment", "cemented its legacy") |
 | Vague attributions ("studies show", "experts say", "it is widely known") |
 | Sycophantic / manufactured-candor openers ("Great question!", "Honestly,", "Real talk.") |
-| Curly quotes, Title Case headings, bold overused through prose, em dashes |
+| Curly quotes, Title Case headings, bold overuse, em dashes |
 | AI-vocabulary density ("delve", "leverage", "tapestry", "synergy") |
 | Weak copulas ("serves as"), empty "-ing" tails, wordy phrases, false ranges, eyebrows |
 
@@ -44,19 +45,15 @@ Design:
 | Lucide icons, Inter / Geist / Space Grotesk as the default typeface |
 | Fake terminal-window props |
 
-The design hook is tuned to pass intentional brand work (a single purposeful gradient, hex borders, a real typeface). Non-regexable tells (bento grids, fake testimonials, missing TOS, slide eyebrows and explainer captions) live in `references/design-slop-patterns.md` for the review agent.
+The design checker passes intentional brand work (a single purposeful gradient, hex borders, a real typeface). Non-regexable tells (bento grids, fake testimonials, slide eyebrows and explainer captions) live in `references/` for the review agent. Full catalogs are in `references/`.
 
-Full catalogs live in `references/`.
+## Run it automatically in Claude Code
 
-## Install
-
-1. **Clone into your Claude skills folder as `deslop`:**
+1. Clone into your skills folder as `deslop` (the name matters - the checkers exempt their own files by that path):
    ```bash
    git clone https://github.com/jarrheyd/deslop.git ~/.claude/skills/deslop
    ```
-   The folder must be named `deslop` - the hooks exempt their own files by that path.
-
-2. **Enable both hooks.** Add this to the `hooks` object in `~/.claude/settings.json`:
+2. Add both hooks to the `hooks` object in `~/.claude/settings.json`:
    ```json
    "PreToolUse": [
      {
@@ -68,32 +65,33 @@ Full catalogs live in `references/`.
      }
    ]
    ```
-   If your build does not expand `~` in hook commands, use the absolute path.
+3. Restart Claude Code. Now every Write/Edit to prose or HTML/CSS is checked automatically.
 
-3. **Restart Claude Code** so the hooks load.
+## Run it anywhere else (pre-commit, CI, Codex, any tool)
 
-The skill works without the hooks - invoke it any time. The hooks just make the check automatic.
+The checkers read Claude Code's hook JSON on stdin, so feeding them a file is one line:
 
-## Use
+```bash
+echo '{"tool_name":"Write","tool_input":{"file_path":"draft.md","content":"'"$(cat draft.md)"'"}}' \
+  | python3 ~/.claude/skills/deslop/hooks/copy_slop_hook.py   # exit 2 = slop found
+```
 
-- **Automatic:** with the hooks on, any Write/Edit to prose or to HTML/CSS gets checked. A block explains the tell and points at the fix.
-- **On demand:** ask Claude to run a slop check on a file, or invoke the skill.
-- **Bypass** for one session: `DISABLE_ANTI_SLOP_HOOK=1`.
+Wrap that in a git `pre-commit` hook or a CI step to gate any repo, or call it from any agent that can run a shell (Codex, your own scripts). Same logic, no Claude dependency. The skill and catalogs are just Markdown any model can read.
 
 ## Designing, not just detecting
 
-deslop *catches* AI design tells. It does not design. For actually building or critiquing an interface (hierarchy, spacing, typography, motion, information architecture), pair it with a design-methodology skill - [impeccable](https://github.com/jarrheyd) is the companion built for that. Rule of thumb: reach for impeccable to make the UI good, and let deslop catch the AI defaults that slip back in.
+deslop *catches* AI design tells. It does not design. To actually build or critique an interface, pair it with a design-methodology skill - [impeccable](https://github.com/jarrheyd) is the companion for that. Reach for impeccable to make the UI good, and let deslop catch the AI defaults that slip back in.
 
 ## Customize
 
-Open `SKILL.md` and find **Operator-observed tells**. Replace the examples with your own, captured from real draft-vs-final corrections - those are the highest-signal patterns you have. Add project words to `TIER1_WORDS` or phrases to `BANNED_PHRASES` in `hooks/copy_slop_hook.py`; add visual tells to `TELLS` in `hooks/design_slop_hook.py`.
+Open `SKILL.md` and find **Operator-observed tells** - replace the examples with your own, captured from real draft-vs-final corrections. Add words to `TIER1_WORDS` or phrases to `BANNED_PHRASES` in `hooks/copy_slop_hook.py`, and visual tells to `TELLS` in `hooks/design_slop_hook.py`.
 
 ## Structure
 
 ```
 SKILL.md                      the router, the laws, the Universal Slop Test
-hooks/copy_slop_hook.py       copy PreToolUse hook (blocks AI copy tells)
-hooks/design_slop_hook.py     design PreToolUse hook (blocks AI visual tells)
+hooks/copy_slop_hook.py       copy checker (blocks AI copy tells)
+hooks/design_slop_hook.py     design checker (blocks AI visual tells)
 references/                   full pattern catalogs (copy, design, image, social, video, website)
 agents/                       slop-detector + copy-humanizer sub-agents
 ```
