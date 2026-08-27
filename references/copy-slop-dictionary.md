@@ -301,8 +301,8 @@ These need a reader, not a regex. The review gate and slop-detector agent apply 
 - **Hollow "-ing" openers.** Gerund-led sentences that front-load a promotional verb: "Leveraging cutting-edge AI, the platform delivers...", "Empowering teams to...". Fix: lead with the subject and a plain verb — "The platform does X."
 - **Elegant variation.** Calling the same thing three different names in one passage to avoid repetition ("the tool… the solution… the platform… the offering"). Reads as padding. Fix: pick one name and repeat it. Repetition is clearer than variety here.
 - **False ranges.** "Everything from X to Y" where X and Y don't bound a real span ("everything from startups to enterprises", "from strategy to execution"). Fix: name the actual items, or cut the frame. (Hook warns on the literal "everything from … to …".)
-- **Decorative emojis.** Emoji used as bullet points, section markers, or sprinkled for tone in prose (✨🚀🔥 leading list items). Fix: cut them; let the words carry it. Exception: a deliberate, consistent header/emoji SYSTEM a team has adopted (the same markers every time, as a scanning aid) is not decoration; the tell is random or ornamental emoji, not a stable set.
-- **Redundant labeled lists / unnecessary colons.** Every list item forced into "**Label:** sentence" when the label adds nothing, or a colon dropped mid-sentence for false weight ("The result: it worked"). Fix: if the label just restates the sentence, drop it; write the sentence. (Legitimate labeled lists -- a consistent "Pending:" or bold summary labels -- are fine; the tell is labels that carry no information.)
+- **Decorative emojis.** Emoji used as bullet points, section markers, or sprinkled for tone in prose (✨🚀🔥 leading list items). Fix: cut them; let the words carry it. Exception: a deliberate, consistent header/emoji SYSTEM a team has adopted (same markers every time, as a scanning aid) is not decoration; the tell is random or ornamental emoji.
+- **Redundant labeled lists / unnecessary colons.** Every list item forced into "**Label:** sentence" when the label adds nothing, or a colon dropped mid-sentence for false weight ("The result: it worked"). Fix: if the label just restates the sentence, drop it; write the sentence. (His legitimate labeled lists — "Pending:", bold client-summary labels — are fine; the tell is labels that carry no information.)
 - **Insincere agreement / manufactured candor mid-text.** "You're absolutely right to ask", "Great point", "Honestly," "To be fair" used as filler inside prose, not just as openers. Fix: cut; get to the content.
 
 ## Unslop-merge patterns (added 2026-08-27)
@@ -333,3 +333,22 @@ These need a reader. The hook already blocks the regex-able cousins (tool-remnan
 - **Vague connection terms.** "in connection with", "in relation to", "with regard to" where a plain preposition (about, for, with) is exact. (hook: warn)
 
 **Signs of HUMAN writing (the counter-signal - presence of these argues AGAINST slop):** the text predates late 2022; the author can explain why a specific choice was made; idiosyncratic, slightly irregular syntax; concrete references only someone present would know. Absence of every tell is not proof of a human - but these are what real authorship leaves behind. See `references/what-humans-do.md`.
+
+## Formatting habits & eyebrows (2026-08-27)
+
+- **Eyebrows / kickers.** A short ALL-CAPS or label line stuck above a headline ("THE PROBLEM", "INTRODUCING", "WHY IT MATTERS"). AI reaches for these to signal structure. Delete it; the headline carries itself.
+- **Random line breaks.** AI drops a line break mid-thought, or strands a single sentence on its own line for false weight. If the break is not a real paragraph or a real list item, it is decoration - close it up.
+- **Stray leading dash / rule.** A dash or horizontal rule at the top of a section or slide as ornament. Cut it.
+- **Explainer top-and-tail.** A header that restates what a section/slide is, plus a footer caption that re-explains it. Both are padding; the content is the explanation.
+
+## Email & scannability tells (from a working email playbook)
+
+For emails and any copy a busy person skims:
+- **One takeaway per email.** If it has two asks, it is two emails.
+- **Body supports the ONE main point** - every line earns its place or is cut.
+- **Specific headlines**, not generic openers ("Quick update", "Hope you're well", "I wanted to reach out").
+- **Cut unnecessary info; be punchy, not padded.** Limit to 1-3 key points.
+- **Write for skimmers:** scannable, no blocks of text, 2-3 scrolls maximum.
+- **Subject line: short and concise.** Preview text: one sentence that ADDS info, does not repeat the subject.
+- **No fabricated claims** - never assert a number, outcome, or fact you cannot back.
+- **No two-beat antithesis** ("it's not X, it's Y") and **no aphorism formulas** ("X, but make it Y", "X is the new Y"). Already blocked by the hook; called out here because they are the ones that slip into "polished" copy.

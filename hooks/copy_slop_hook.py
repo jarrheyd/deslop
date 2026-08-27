@@ -435,47 +435,30 @@ def main():
     curly = check_curly_quotes(content)
     titlecase = check_title_case_headings(content)
     bold = check_bold_overuse(content)
-    density_warnings = check_word_density(content)
-    em_dash_warnings = check_em_dash_density(content)
-    filler_warnings = check_filler_transitions(content)
-    uniformity_warnings = check_paragraph_uniformity(content)
-    weak_warnings = check_weak_phrases(content)
+    # EVERYTHING BLOCKS (2026-08-27): block, do not warn. The former
+    # warn tier (density, em dash, filler transitions, weak copulas / -ing tails / wordy / false ranges) is now
+    # blocking. Two deliberate calls: (1) the paragraph-uniformity heuristic is DROPPED, not promoted - blocking
+    # a write because "paragraphs are similar length" false-positives on every structured doc. (2) em dashes now
+    # block on ANY occurrence (he bans them outright), not just past a density threshold.
+    density_blocks = [(0, w) for w in check_word_density(content)]
+    filler_blocks = [(w[0], w[1]) if isinstance(w, tuple) else (0, w) for w in check_filler_transitions(content)]
+    weak_blocks = check_weak_phrases(content)
+    emdash_blocks = []
+    if EM_DASH in content:
+        emdash_blocks = [(0, f"[BLOCK] em dash present ({content.count(EM_DASH)}x) - banned outright; use a hyphen, comma, or period")]
 
-    # Compile output
-    all_blocks = banned + curly + titlecase + bold  # these are blocking
-    all_warnings = []
-    all_warnings.extend(density_warnings)
-    all_warnings.extend(em_dash_warnings)
-    all_warnings.extend([(w[0], w[1]) if isinstance(w, tuple) else (0, w) for w in filler_warnings])
-    all_warnings.extend([(0, w) for w in uniformity_warnings])
-    all_warnings.extend(weak_warnings)
+    all_blocks = banned + curly + titlecase + bold + weak_blocks + density_blocks + emdash_blocks + filler_blocks
 
     if all_blocks:
-        parts = [f"AI Slop BLOCKED — {len(all_blocks)} banned pattern(s) in {os.path.basename(file_path)}:\n"]
-        for line_num, msg in all_blocks[:6]:
+        parts = [f"AI Slop BLOCKED — {len(all_blocks)} pattern(s) in {os.path.basename(file_path)}:\n"]
+        for line_num, msg in all_blocks[:8]:
             parts.append(f"  Line ~{line_num}: {msg}")
-        if len(all_blocks) > 6:
-            parts.append(f"\n  ... and {len(all_blocks) - 6} more.")
+        if len(all_blocks) > 8:
+            parts.append(f"\n  ... and {len(all_blocks) - 8} more.")
         parts.append("\nRewrite without these AI patterns. See: ~/.claude/skills/deslop/references/copy-slop-dictionary.md")
-
-        if all_warnings:
-            parts.append(f"\nAlso {len(all_warnings)} warning(s):")
-            for item in all_warnings[:3]:
-                msg = item[1] if isinstance(item, tuple) else item
-                parts.append(f"  {msg}")
-
-        debug_log(f"BLOCKED: {file_path} — {len(all_blocks)} banned phrases")
+        debug_log(f"BLOCKED: {file_path} — {len(all_blocks)} patterns")
         print("\n".join(parts), file=sys.stderr)
         sys.exit(2)
-
-    if all_warnings:
-        parts = [f"AI Slop warnings in {os.path.basename(file_path)}:\n"]
-        for item in all_warnings[:5]:
-            msg = item[1] if isinstance(item, tuple) else item
-            parts.append(f"  {msg}")
-        debug_log(f"WARNED: {file_path} — {len(all_warnings)} warnings")
-        print("\n".join(parts), file=sys.stderr)
-        sys.exit(0)
 
     debug_log(f"PASSED: {file_path}")
     sys.exit(0)

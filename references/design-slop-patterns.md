@@ -105,3 +105,43 @@ Before shipping any screen, verify:
 - [ ] Spacing has contrast (dense + spacious, not uniform)
 - [ ] All states designed: empty, error, loading, edge cases
 - [ ] A screenshot alone communicates which brand this is
+
+## AI design tells - full checklist (2026-08-27)
+
+Regex-caught by `hooks/design_slop_hook.py` are marked (hook); the rest need a reviewer's eye (judgment). Applies to landing pages, decks, and app UI.
+
+**Color & light**
+- Harsh / over-gradients, multiple gradients as decoration (hook: 4+). One purposeful gradient is fine.
+- AI purple, purple-and-black, the #667eea->#764ba2 gradient (hook).
+- Rainbow / neon / basic-pastel palettes with no brand logic (judgment).
+- Radial orbs and glowing blobs in the background (hook: blur blob / radial).
+- Pure #ffffff page background instead of an intentional off-white (judgment; his brands use chalk/off-white).
+
+**Depth & shape**
+- Drop-shadow filter and the generic rgba(0,0,0,0.1) card shadow (hook).
+- Soft-corner-radius on everything, uniform (judgment).
+- Faint hairline card outlines, the invisible border (hook).
+- Liquid glass / glassmorphism, backdrop blur (hook).
+
+**Layout & components**
+- 3 feature cards in a row; bento grids; dot grids (judgment).
+- Colored left stripe / accent-border cards (hook).
+- 3 pricing tiers as the default shape (judgment).
+- Terminal-window mockup as a hero prop (hook, best-effort).
+- Fake testimonials; no real product demos or screenshots (judgment).
+- Missing TOS / privacy policy / skeleton loaders on a "real" product (judgment - real products have these).
+
+**Icons, type, motion**
+- Lucide icons; Inter / Geist / Space Grotesk as the default typeface (hook).
+- Emojis and sparkle icons as decoration (judgment).
+- Checkmark-bullet lists everywhere (judgment).
+- Animated arrows, gratuitous hover animations (judgment).
+
+## Slide-specific tells (do NOT do these in decks)
+
+- **No eyebrow / kicker** - the little label above a slide headline ("THE PROBLEM", "INTRODUCING X"). Delete it; the headline stands alone.
+- **No dash / rule at the top** of a slide as ornament.
+- **No explainer header** that restates what the slide is ("This slide covers..."). The content IS the explanation.
+- **No footer caption** that re-explains the slide at the bottom. Both the top explainer and bottom caption make a slide wordy - cut both.
+- A slide is one idea, shown - not an idea wrapped in a label, a header, and a caption. See the "no corner chrome" rule.
+- **No summary closing slide.** A closing slide, if you need one, is a thank-you or contact info - never a recap of what was just shown. The deck already made the point.

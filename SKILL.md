@@ -52,17 +52,17 @@ The design-system and brand-system skills both reference this skill. Their workf
 
 ## Operator-observed tells (customize this section)
 
-Example tells caught from real draft-vs-final corrections for one writer. They outrank the generic lists when writing AS a specific person or FOR their review. Replace them with your own, captured the same way -- the highest-signal patterns are the ones you catch in your own edits.
+Example tells caught from real draft-vs-final corrections for one writer. They outrank the generic lists when writing AS a specific person or FOR their review. Replace them with your own.
 
-1. **Em dashes.** Some writers ban them outright, not just at density. Decide the rule and hold it; the inline separator is a plain hyphen " - ".
-2. **Over-committing language.** "locked 300 characters" vs "proposing 300." A draft must never commit the writer (or their org) harder than the verified facts. Cover what's agreed, ASK the open question, never blanket-approve money or scope.
-3. **Sectioned essays where a few numbered questions would do.** Pushback is 2-3 numbered questions, not four headed sections. ALL-CAPS asterisk headers are a tell; real headers are bold sentence-case, and only when the piece needs them.
-4. **Compression that drops substance.** Cutting a real point just to be short is a loss. Target the writer's length AND the draft's completeness.
-5. **Promise-language vs act-language.** "I'll loop in the client" vs "I've already informed the client." Act first, then reference the action.
-6. **Doom warnings and public assignments in client-facing chat.** Strip alarmism; open questions and offers, not directives naming who must do what in front of the client.
-7. **Report verbosity.** Reports to a busy reader: fragments over grammar, no preamble, lead with the outcome. Repeating the ask back is slop.
-8. **Duplicate artifacts.** Revising by creating a second draft/file and leaving the old one around is a slop workflow. Revise in place; one clean artifact.
-9. **Fake completion language.** "Done / created / sent" without the action having actually run. If you didn't see it happen, it didn't happen.
+1. **Em dashes.** Some writers ban them outright. Decide the rule and hold it; the inline separator is a plain hyphen " - ".
+2. **Over-committing language.** A draft must never commit the writer (or their org) harder than the verified facts.
+3. **Sectioned essays where a few numbered questions would do.**
+4. **Compression that drops substance.** Target the writer's length AND the draft's completeness.
+5. **Promise-language vs act-language.** "I'll loop them in" vs "I've already told them." Act first, then reference it.
+6. **Doom warnings and public assignments in client-facing chat.** Open questions and offers, not directives.
+7. **Report verbosity.** Fragments over grammar, no preamble, lead with the outcome.
+8. **Duplicate artifacts.** Revise in place; one clean artifact.
+9. **Fake completion language.** "Done / sent" without the action having run.
 
 ## Post-implementation review gate (MANDATORY)
 
@@ -73,7 +73,7 @@ After EVERY implementation — a feature, a document, a proposal, a design, copy
 3. High-stakes (client-facing, published, in a specific person's voice) → full slop-detector agent pass.
 4. Violations get FIXED, then present — never presented with a "note: might be sloppy" caveat.
 
-If you run a feature-development loop, wire this in as the slop-review gate near the end: audit → research → plan → implement → test → fix → **slop review** → done.
+If you run a feature-development loop, wire this in as the slop-review gate near the end.
 
 ## The Three Laws
 

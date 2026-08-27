@@ -9,6 +9,7 @@ Not a style guide. A bullshit detector.
 Two layers:
 
 1. **An automatic `PreToolUse` hook** (`hooks/copy_slop_hook.py`) that runs on every `Write`/`Edit`/`MultiEdit` to prose files (`.md`, `.mdx`, `.txt`, `.html`, and string literals in `.tsx`/`.jsx`/`.ts`/`.js`/`.py`). It **blocks** hard tells and **warns** on softer ones, before the text lands on disk.
+3. **A design hook** (`hooks/design_slop_hook.py`) that scans HTML/CSS/JSX on write and blocks AI-default *visual* tells (purple gradients, glassmorphism, left-border accent cards, the generic 0.1 shadow, Lucide, Inter/Geist, drop-shadow, overgradient).
 2. **A skill** (`SKILL.md` + `references/` + `agents/`) you can invoke for a full slop review, with a copy dictionary, a slop-detector agent, and a copy-humanizer agent.
 
 ### A sample of what's caught
@@ -42,7 +43,8 @@ Full catalogs live in `references/`.
      {
        "matcher": "Write|Edit|MultiEdit",
        "hooks": [
-         { "type": "command", "command": "python3 ~/.claude/skills/deslop/hooks/copy_slop_hook.py", "timeout": 5 }
+         { "type": "command", "command": "python3 ~/.claude/skills/deslop/hooks/copy_slop_hook.py", "timeout": 5 },
+        { "type": "command", "command": "python3 ~/.claude/skills/deslop/hooks/design_slop_hook.py", "timeout": 5 }
        ]
      }
    ]
