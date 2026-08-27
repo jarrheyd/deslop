@@ -72,10 +72,6 @@ references/                   full pattern catalogs (copy, design, image, social
 agents/                      slop-detector + copy-humanizer sub-agents
 ```
 
-## Prior art
-
-Patterns synthesized from common AI-writing research, including Wikipedia's [Signs of AI writing](https://en.wikipedia.org/wiki/Wikipedia:Signs_of_AI_writing) and the Cursor "unslop" skill. Extended with structural, hook-enforced detection and a customizable operator-tells layer.
-
 ## License
 
 MIT - see [LICENSE](LICENSE).
