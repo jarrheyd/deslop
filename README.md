@@ -4,6 +4,10 @@ A quality gate for [Claude Code](https://docs.claude.com/en/docs/claude-code) th
 
 Not a style guide. A bullshit detector.
 
+## Scope: it only subtracts
+
+deslop removes AI tells. That is the whole intent. It does **not** teach voice, tone, or positive style, and it should not - a clean draft with no voice is still lifeless, but that is a separate problem with a separate fix. Bring your own voice or brand model (a style guide, sample writing, a design-methodology skill) and let it add the character; let deslop strip what the model leaves behind. Subtraction here, augmentation there.
+
 ## What it does
 
 Three parts:
