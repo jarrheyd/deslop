@@ -1,31 +1,46 @@
 # deslop
 
-A quality gate for [Claude Code](https://docs.claude.com/en/docs/claude-code) that catches AI-generated writing tells in prose **before they ship** - the words, phrases, and structures that read as machine-written.
+A quality gate for [Claude Code](https://docs.claude.com/en/docs/claude-code) that catches AI tells **before they ship** - the words, phrases, and visual patterns that read as machine-made.
 
 Not a style guide. A bullshit detector.
 
 ## What it does
 
-Two layers:
+Three parts:
 
-1. **An automatic `PreToolUse` hook** (`hooks/copy_slop_hook.py`) that runs on every `Write`/`Edit`/`MultiEdit` to prose files (`.md`, `.mdx`, `.txt`, `.html`, and string literals in `.tsx`/`.jsx`/`.ts`/`.js`/`.py`). It **blocks** hard tells and **warns** on softer ones, before the text lands on disk.
-3. **A design hook** (`hooks/design_slop_hook.py`) that scans HTML/CSS/JSX on write and blocks AI-default *visual* tells (purple gradients, glassmorphism, left-border accent cards, the generic 0.1 shadow, Lucide, Inter/Geist, drop-shadow, overgradient).
-2. **A skill** (`SKILL.md` + `references/` + `agents/`) you can invoke for a full slop review, with a copy dictionary, a slop-detector agent, and a copy-humanizer agent.
+1. **Copy hook** (`hooks/copy_slop_hook.py`) - a `PreToolUse` hook on every `Write`/`Edit`/`MultiEdit` to prose (`.md`, `.mdx`, `.txt`, `.html`, and string literals in `.tsx`/`.jsx`/`.ts`/`.js`/`.py`). Catches AI copy tells before the text lands on disk.
+2. **Design hook** (`hooks/design_slop_hook.py`) - a `PreToolUse` hook on `.html`/`.css`/`.scss`/`.tsx`/`.jsx`/`.vue`/`.svelte`. Catches AI-default *visual* tells in the source.
+3. **The skill** (`SKILL.md` + `references/` + `agents/`) - invoke it for a full review, with the pattern catalogs, a slop-detector agent, and a copy-humanizer agent.
+
+**Everything blocks.** There is no warn tier: a tell stops the write and explains itself, so you fix it instead of shipping it. Bypass a session with `DISABLE_ANTI_SLOP_HOOK=1`.
 
 ### A sample of what's caught
 
-| Catches | Action |
-|---|---|
-| Banned phrases (the "fast-paced world" / "not just X, it's Y" / "unlock the power of" family) | block |
-| AI tool-remnant markers (ChatGPT/Gemini citation artifacts left in text) | block |
-| Chatbot outros ("I hope this helps", "feel free to reach out", "any questions") | block |
-| Significance/legacy puffery ("stands as a testament", "pivotal moment", "cemented its legacy") | block |
-| Vague attributions ("studies show", "experts say", "it is widely known") | block |
-| Sycophantic / manufactured-candor openers ("Great question!", "Honestly,", "Real talk.") | block |
-| Curly quotes, Title Case headings, bold overused through prose | block |
-| AI-vocabulary density ("delve", "leverage", "tapestry", "synergy") | warn |
-| Em-dash abuse, uniform paragraph length, hedging soup, filler transitions | warn |
-| Weak copulas, empty "-ing" tails, wordy phrases, false ranges | warn |
+Copy:
+
+| Tell |
+|---|
+| Banned phrases (the "fast-paced world" / "not just X, it's Y" / "unlock the power of" family) |
+| AI tool-remnant markers (ChatGPT/Gemini citation artifacts left in text) |
+| Chatbot outros ("I hope this helps", "feel free to reach out", "any questions") |
+| Significance/legacy puffery ("stands as a testament", "pivotal moment", "cemented its legacy") |
+| Vague attributions ("studies show", "experts say", "it is widely known") |
+| Sycophantic / manufactured-candor openers ("Great question!", "Honestly,", "Real talk.") |
+| Curly quotes, Title Case headings, bold overused through prose, em dashes |
+| AI-vocabulary density ("delve", "leverage", "tapestry", "synergy") |
+| Weak copulas ("serves as"), empty "-ing" tails, wordy phrases, false ranges, eyebrows |
+
+Design:
+
+| Tell |
+|---|
+| AI purple, the ChatGPT `#667eea`->`#764ba2` gradient, overgradient (4+) |
+| Gradient text, glassmorphism (backdrop blur), decorative blur blobs |
+| Left-border accent cards, the generic `rgba(0,0,0,0.1)` shadow, drop-shadow, faint hairline borders |
+| Lucide icons, Inter / Geist / Space Grotesk as the default typeface |
+| Fake terminal-window props |
+
+The design hook is tuned to pass intentional brand work (a single purposeful gradient, hex borders, a real typeface). Non-regexable tells (bento grids, fake testimonials, missing TOS, slide eyebrows and explainer captions) live in `references/design-slop-patterns.md` for the review agent.
 
 Full catalogs live in `references/`.
 
@@ -35,43 +50,48 @@ Full catalogs live in `references/`.
    ```bash
    git clone https://github.com/jarrheyd/deslop.git ~/.claude/skills/deslop
    ```
-   The folder must be named `deslop` - the hook exempts its own files by that path.
+   The folder must be named `deslop` - the hooks exempt their own files by that path.
 
-2. **Enable the automatic hook** (recommended). Add this to the `hooks` object in `~/.claude/settings.json`:
+2. **Enable both hooks.** Add this to the `hooks` object in `~/.claude/settings.json`:
    ```json
    "PreToolUse": [
      {
        "matcher": "Write|Edit|MultiEdit",
        "hooks": [
          { "type": "command", "command": "python3 ~/.claude/skills/deslop/hooks/copy_slop_hook.py", "timeout": 5 },
-        { "type": "command", "command": "python3 ~/.claude/skills/deslop/hooks/design_slop_hook.py", "timeout": 5 }
+         { "type": "command", "command": "python3 ~/.claude/skills/deslop/hooks/design_slop_hook.py", "timeout": 5 }
        ]
      }
    ]
    ```
-   If your build does not expand `~` in hook commands, use the absolute path (e.g. `python3 /Users/you/.claude/skills/deslop/hooks/copy_slop_hook.py`).
+   If your build does not expand `~` in hook commands, use the absolute path.
 
-3. **Restart Claude Code** so the hook loads.
+3. **Restart Claude Code** so the hooks load.
 
-The skill works without the hook - invoke it any time. The hook just makes the check automatic.
+The skill works without the hooks - invoke it any time. The hooks just make the check automatic.
 
 ## Use
 
-- **Automatic:** with the hook on, any Write/Edit to prose gets checked. A block explains the tell and points at the fix; a warn prints but does not stop you.
+- **Automatic:** with the hooks on, any Write/Edit to prose or to HTML/CSS gets checked. A block explains the tell and points at the fix.
 - **On demand:** ask Claude to run a slop check on a file, or invoke the skill.
 - **Bypass** for one session: `DISABLE_ANTI_SLOP_HOOK=1`.
 
+## Designing, not just detecting
+
+deslop *catches* AI design tells. It does not design. For actually building or critiquing an interface (hierarchy, spacing, typography, motion, information architecture), pair it with a design-methodology skill - [impeccable](https://github.com/jarrheyd) is the companion built for that. Rule of thumb: reach for impeccable to make the UI good, and let deslop catch the AI defaults that slip back in.
+
 ## Customize
 
-Open `SKILL.md` and find **Operator-observed tells**. Replace the examples with your own, captured from real draft-vs-final corrections - those personal tells are the highest-signal patterns you have. Add project words to `TIER1_WORDS` or phrases to `BANNED_PHRASES` in `hooks/copy_slop_hook.py`.
+Open `SKILL.md` and find **Operator-observed tells**. Replace the examples with your own, captured from real draft-vs-final corrections - those are the highest-signal patterns you have. Add project words to `TIER1_WORDS` or phrases to `BANNED_PHRASES` in `hooks/copy_slop_hook.py`; add visual tells to `TELLS` in `hooks/design_slop_hook.py`.
 
 ## Structure
 
 ```
-SKILL.md                     the router, the laws, the Universal Slop Test
-hooks/copy_slop_hook.py      the automatic PreToolUse hook (block/warn)
+SKILL.md                      the router, the laws, the Universal Slop Test
+hooks/copy_slop_hook.py       copy PreToolUse hook (blocks AI copy tells)
+hooks/design_slop_hook.py     design PreToolUse hook (blocks AI visual tells)
 references/                   full pattern catalogs (copy, design, image, social, video, website)
-agents/                      slop-detector + copy-humanizer sub-agents
+agents/                       slop-detector + copy-humanizer sub-agents
 ```
 
 ## License
