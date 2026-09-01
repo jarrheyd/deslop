@@ -26,6 +26,12 @@ Apple-style grid of rounded cards used as a content dump. AI generates these bec
 - **The test**: "Does every card deserve equal visual weight? What's the ONE thing on this page?"
 - **Fix**: Use hierarchy. One hero element, supporting elements smaller. Not everything needs a card. Flat content with dividers. Asymmetric grid with one large + several small.
 
+### 3b. Bar Line Under Every Heading
+A colored horizontal rule under each section heading, or a decorative `<hr>` between sections. AI reaches for it to signal "this is a section." In a document (or an HTML-to-Google-Doc conversion, where `h2{border-bottom}` becomes a `---` rule) it reads as machine-generated section furniture.
+- **Detection**: `h1`-`h6` styled with `border-bottom`, standalone `<hr>` between blocks, a `---` rule under headings in a converted doc
+- **The test**: "Does this heading need a line drawn under it, or is the bold weight plus the space above it already the divider?"
+- **Fix**: Delete the rule. Let heading weight, size, and generous whitespace mark the section. If you truly need a visual break, use spacing, not a bar. (Enforced in `design_slop_hook.py`.)
+
 ### 4. Shadow Soup
 Every component has a different shadow depth, blur radius, and border treatment. Cards, buttons, and inputs all look like they're from different apps.
 - **Detection**: More than 2 shadow values on a single page. Mix of bordered and shadowed cards.
@@ -137,7 +143,7 @@ Regex-caught by `hooks/design_slop_hook.py` are marked (hook); the rest need a r
 - Checkmark-bullet lists everywhere (judgment).
 - Animated arrows, gratuitous hover animations (judgment).
 
-## Slide-specific tells (do NOT do these in decks)
+## Slide-specific tells (Jarrhey, 2026-08-27 - do NOT do these in decks)
 
 - **No eyebrow / kicker** - the little label above a slide headline ("THE PROBLEM", "INTRODUCING X"). Delete it; the headline stands alone.
 - **No dash / rule at the top** of a slide as ornament.

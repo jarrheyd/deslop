@@ -9,7 +9,7 @@ stopped: AI purple, the ChatGPT gradient, gradient text, glassmorphism, left-bor
 cards, the generic rgba(0,0,0,0.1) shadow, ultra-faint card outlines, decorative blur blobs,
 Inter-as-default, and overgradient.
 
-Everything here BLOCKS (no warn tier). Bypass a session with DISABLE_ANTI_SLOP_HOOK=1.
+Everything here BLOCKS (Jarrhey, 2026-08-27: no warn tier). Bypass a session with DISABLE_ANTI_SLOP_HOOK=1.
 
 Exit codes: 0 = allow, 2 = block.
 """
@@ -58,6 +58,10 @@ TELLS = [
      "Lucide icons - the default AI icon set; pick icons that fit the brand"),
     (r'(?i)class(?:Name)?\s*=\s*["\'][^"\']*\b(?:terminal|code-window|window-dots|traffic-lights?)\b',
      "fake terminal-window mockup - an overused AI landing-page prop"),
+    (r"(?is)\bh[1-6]\s*(?:,[^{}]*)?\{[^{}]*border-bottom\s*:",
+     "bar line under a heading (h1-h6 with border-bottom) - the AI section-divider rule; let the heading's weight and spacing carry it, no underline bar"),
+    (r"(?i)<hr\b(?![^>]*\brole\s*=\s*[\"']?separator)",
+     "decorative <hr> rule - AI section-divider furniture; use whitespace and heading hierarchy instead of a bar"),
 ]
 
 

@@ -42,6 +42,8 @@ The antidote is not "don't use AI." It's **specificity, intentionality, and huma
 
 Set `DISABLE_ANTI_SLOP_HOOK=1` to bypass.
 
+**Artifact gate (`hooks/artifact_slop_hook.py`, added 2026-08-31).** The two hooks above only see local file writes, so a Google Doc / Slides / Sheet created straight through the Drive connector, or a published Artifact, used to slip past. This hook closes that gap: it fires on `Artifact` and any `mcp__*__create_file` / `mcp__*__update_file`, pulls the body out of `textContent` / `base64Content` / `html` (or the Artifact's `file_path`), and runs it back through the copy and design hooks. Any block there blocks the artifact. Binary uploads (image/pdf/font) and empty/native-shell creates are no-ops. Same `DISABLE_ANTI_SLOP_HOOK=1` bypass. Note: hooks load at session start, so it protects new sessions; mid-session, self-gate by running the checks before create_file.
+
 ### 2. Manual Invocation
 
 Use `/deslop` or ask Claude to run a slop check on any content.
@@ -50,30 +52,35 @@ Use `/deslop` or ask Claude to run a slop check on any content.
 
 The design-system and brand-system skills both reference this skill. Their workflows include an anti-slop check before shipping.
 
-## Operator-observed tells (customize this section)
+## Jarrhey-observed tells (2026-07, from live draft-vs-sent corrections)
 
-Example tells caught from real draft-vs-final corrections for one writer. They outrank the generic lists when writing AS a specific person or FOR their review. Replace them with your own.
+Patterns caught in real usage — his actual sent messages vs AI drafts. These outrank the generic lists when writing AS Jarrhey or FOR his review:
 
-1. **Em dashes.** Some writers ban them outright. Decide the rule and hold it; the inline separator is a plain hyphen " - ".
-2. **Over-committing language.** A draft must never commit the writer (or their org) harder than the verified facts.
-3. **Sectioned essays where a few numbered questions would do.**
-4. **Compression that drops substance.** Target the writer's length AND the draft's completeness.
-5. **Promise-language vs act-language.** "I'll loop them in" vs "I've already told them." Act first, then reference it.
-6. **Doom warnings and public assignments in client-facing chat.** Open questions and offers, not directives.
-7. **Report verbosity.** Fragments over grammar, no preamble, lead with the outcome.
-8. **Duplicate artifacts.** Revise in place; one clean artifact.
-9. **Fake completion language.** "Done / sent" without the action having run.
+1. **Em dashes: banned outright** in his output, not just "abuse at density." Inline separator is a plain hyphen " - ". (Global rule, all mediums.)
+2. **Over-committing language.** AI drafted "locked 300 characters"; he sent "Proposing 300." Drafts must never commit him (or Symph) harder than verified facts: cover what's agreed, ASK the clarifying question ("Are those the 2 sessions you meant?"), never blanket-approve money/scope.
+3. **Sectioned essays where numbered questions suffice.** His pushback is 2-3 numbered questions, not 4 headed sections. ALL-CAPS asterisk headers = tell; his real headers are bold sentence-case ("How we'll work"), and only when an email truly needs them.
+4. **Compression that drops substance.** Cutting a real point to be short is a loss (the dropped-signatories lesson). Target: his length, the draft's completeness.
+5. **Promise-language vs act-language.** AI writes "I'll loop in Flor"; he writes "I have already informed Flor." Act first, then reference the action.
+6. **Doom warnings and public assignments in client chat.** Strip alarmism; open questions and offers, not directives naming who must do what in front of the client.
+7. **Report verbosity.** Reports to him: fragments over grammar, no preamble, lead with the outcome. Repeating the ask back = slop.
+8. **Duplicate artifacts.** Revising by creating a second draft/file and leaving the old one = slop workflow. Revise in place, one clean artifact.
+9. **Fake completion language.** "Done/created/sent" without a tool having run. If you didn't see the tool response, it didn't happen.
+10. **Bold-lead paragraph (2026-08-28).** A bold fragment used as a pseudo-title, then body prose in the same paragraph -- "**Evidence boundary.** A format-valid timestamp confirms...". Classic AI carousel/marketing tell. Drop the bold pseudo-title; just write the sentence. (Enforced in the hook, period-terminated bold only, so legit `**Label:** value` lines still pass.)
+11. **Middot separators (2026-08-28).** " · " used as connective tissue ("Jan · Jul", "DBM · Open Gov"). An AI tell. Use a word, a comma, or a line break. (Enforced in the hook.)
+12. **Carousel/slide furniture tells (2026-08-28).** Page-number dots ("1/10", pagination dots), upper-right kicker/eyebrow labels, and per-slide section titles all read as AI-generated deck slop. No page numbers, no eyebrow labels, no "The problem:" pseudo-headers -- let the headline carry the point.
+13. **Over-titling / over-repeating (2026-08-28).** Adding a label to a slide that the headline already says, repeating the same footer descriptor on every frame, or restating the credit line twice on one slide. Say it once, in one place.
+14. **Bar line under a heading (2026-08-31).** A colored horizontal rule under every section heading -- `h2{border-bottom:2px solid ...}` in CSS, an `<hr>`, or the `---` a heading border becomes when HTML converts to a Google Doc. Reads as AI section-divider furniture. Let the heading weight and the whitespace carry the break, no underline bar. (Enforced in `design_slop_hook.py`: h1-h6 with `border-bottom`, and decorative `<hr>`.)
 
 ## Post-implementation review gate (MANDATORY)
 
 After EVERY implementation — a feature, a document, a proposal, a design, copy, a UI — run this skill as a review BEFORE presenting the result:
 
 1. Sweep the deliverable's user-facing surfaces: copy/microcopy, docs, UI choices, generated designs, commit-adjacent prose.
-2. Apply the Universal Slop Test + the operator-observed tells above + the relevant domain reference.
-3. High-stakes (client-facing, published, in a specific person's voice) → full slop-detector agent pass.
+2. Apply the Universal Slop Test + the Jarrhey-observed tells above + the relevant domain reference.
+3. High-stakes (client-facing, published, in his voice) → full slop-detector agent pass.
 4. Violations get FIXED, then present — never presented with a "note: might be sloppy" caveat.
 
-If you run a feature-development loop, wire this in as the slop-review gate near the end.
+This gate is part of the global feature-development protocol (`~/.claude/CLAUDE.md`): audit → research → plan → implement → test → fix → **slop review** → done.
 
 ## The Three Laws
 

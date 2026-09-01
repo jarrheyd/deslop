@@ -11,6 +11,7 @@ Exit codes:
   2 = block (banned phrase found)
 """
 
+import html
 import json
 import os
 import re
@@ -85,8 +86,8 @@ BANNED_PHRASES = [
     # Redundant verbs (AI padding)
     (r"(?i)\bserves\s+as\b", "banned phrase: 'serves as' — just say 'is'"),
 
-    # Cliche phrases flagged in live corrections
-    (r"(?i)\bwhack[- ]?a[- ]?mole\b", "banned cliche: 'whack-a-mole' -- plain it out (e.g. 'each fix caused the next problem')"),
+    # Jarrhey-banned words (flagged in live corrections)
+    (r"(?i)\bwhack[- ]?a[- ]?mole\b", "Jarrhey-banned: 'whack-a-mole' -- plain it out (e.g. 'each fix caused the next problem')"),
 
     # Sycophantic
     (r"(?i)^great\s+question!", "banned phrase: 'Great question!' — just answer it"),
@@ -173,7 +174,7 @@ FILLER_TRANSITIONS = [
 ]
 
 # ============================================================
-# BLOCKING: curly quotes, Title Case headings, bold overuse (added 2026-08-18)
+# BLOCKING: curly quotes, Title Case headings, bold overuse (added 2026-08-18, Jarrhey's call)
 # ============================================================
 
 CURLY_QUOTES = {"“", "”", "‘", "’"}  # " " ' '
@@ -198,7 +199,7 @@ WEAK_PHRASES = [
     (r"(?i)\beverything\s+from\s+\w+\s+to\s+\w+", "false range: 'everything from X to Y' -- list the real items or cut"),
     (r"(?i)\bbased\s+on\s+the\s+(?:information|data)\s+(?:provided|available)\b", "AI disclaimer: 'based on the information provided' -- just answer"),
     (r"(?i)\bit\s+appears\s+that\b", "hedge: 'it appears that' -- say what is, or name the uncertainty concretely"),
-    # --- unslop merge 2, added 2026-08-27: weak copulas, empty -ing tails, abstract jargon ---
+    # --- unslop merge 2, added 2026-08-27 (Jarrhey): weak copulas, empty -ing tails, abstract jargon ---
     (r"(?i)\b(?:serves|stands)\s+as\b", "weak copula: 'serves/stands as' -- just say what it is ('is', 'runs', 'handles')"),
     (r"(?i)\bboasts\b", "puffery verb: 'boasts' -- use a plain verb ('has', 'includes')"),
     (r"(?i),\s+(?:highlighting|showcasing|underscoring|emphasizing|reflecting|ensuring|demonstrating)\s+", "empty -ing tail: ', highlighting/ensuring...' -- start a new sentence with the concrete point"),
@@ -361,7 +362,7 @@ def check_weak_phrases(content):
 
 
 def check_curly_quotes(content):
-    """BLOCK: smart/curly quotes -- straight ASCII is preferred."""
+    """BLOCK: smart/curly quotes — Jarrhey writes straight ASCII."""
     violations = []
     for i, line in enumerate(content.split("\n"), 1):
         if any(c in line for c in CURLY_QUOTES):
@@ -397,6 +398,37 @@ def check_bold_overuse(content):
         sentences = len(re.findall(r"[.!?](?:\s|$)", p))
         if bolds >= 4 and sentences >= 2 and len(p.split()) >= 40:
             violations.append((0, f"[BLOCK] bold overused ({bolds} bold spans in one prose paragraph) — bold is for rare emphasis, not decoration"))
+    return violations
+
+
+def check_bold_lead_paragraph(content):
+    """BLOCK: the 'bold title. then body' paragraph tell (2026-08-28, Jarrhey).
+    A bold fragment used as a sentence-title, period-terminated, then body prose in the
+    same paragraph — e.g. '**Evidence boundary.** A format-valid timestamp confirms...'.
+    Scoped to a PERIOD-terminated bold lead so it does NOT hit '**Label:** value' lines
+    (colon, used in memory files) or ordinary mid-sentence emphasis."""
+    violations = []
+    patterns = [
+        r"\*\*[^*\n]{2,70}\.\*\*\s+[A-Z0-9]",   # **Title.** Body
+        r"\*\*[^*\n]{2,70}\*\*\.\s+[A-Z0-9]",   # **Title**. Body
+        r"<strong[^>]*>[^<]{2,70}\.</strong>\s+[A-Z0-9]",   # <strong>Title.</strong> Body
+        r"<strong[^>]*>[^<]{2,70}</strong>\.\s+[A-Z0-9]",   # <strong>Title</strong>. Body
+    ]
+    for i, line in enumerate(content.split("\n"), 1):
+        for pat in patterns:
+            if re.search(pat, line):
+                violations.append((i, "[BLOCK] bold-lead paragraph ('**Title.** then body') - an AI tell; drop the bold pseudo-title, just write the sentence"))
+                break
+    return violations
+
+
+def check_middot_separator(content):
+    """BLOCK: spaced middot separator ' · ' used as connective tissue (2026-08-28, Jarrhey).
+    An AI tell in copy ('Jan · Jul', 'DBM · Open Gov'). Use a plain word, comma, or line break."""
+    violations = []
+    for i, line in enumerate(content.split("\n"), 1):
+        if re.search(r"\s·\s", line):
+            violations.append((i, "[BLOCK] ' · ' middot separator - an AI tell; use a word, comma, or separate line"))
     return violations
 
 
@@ -442,12 +474,21 @@ def main():
     elif not is_prose_file(file_path):
         sys.exit(0)
 
+    # HTML entities hide slop from the character-based checks: &mdash; (and &#8212; / &#x2014;)
+    # is an em dash, &middot; a middot, &rsquo; a curly quote. Decode them so encoded slop
+    # blocks exactly like a literal character would. (2026-08-28: a deck slipped em dashes as
+    # &mdash; past this gate because the scan only saw the literal codepoint.)
+    if is_prose_file(file_path) and os.path.splitext(file_path)[1].lower() in {".html", ".htm"}:
+        content = html.unescape(content)
+
     # Run checks
     banned = check_banned_phrases(content)
     curly = check_curly_quotes(content)
     titlecase = check_title_case_headings(content)
     bold = check_bold_overuse(content)
-    # EVERYTHING BLOCKS (2026-08-27): block, do not warn. The former
+    boldlead = check_bold_lead_paragraph(content)
+    middot = check_middot_separator(content)
+    # EVERYTHING BLOCKS (2026-08-27, Jarrhey: "everything should just block, no need for warn"). The former
     # warn tier (density, em dash, filler transitions, weak copulas / -ing tails / wordy / false ranges) is now
     # blocking. Two deliberate calls: (1) the paragraph-uniformity heuristic is DROPPED, not promoted - blocking
     # a write because "paragraphs are similar length" false-positives on every structured doc. (2) em dashes now
@@ -459,7 +500,7 @@ def main():
     if EM_DASH in content:
         emdash_blocks = [(0, f"[BLOCK] em dash present ({content.count(EM_DASH)}x) - banned outright; use a hyphen, comma, or period")]
 
-    all_blocks = banned + curly + titlecase + bold + weak_blocks + density_blocks + emdash_blocks + filler_blocks
+    all_blocks = banned + curly + titlecase + bold + boldlead + middot + weak_blocks + density_blocks + emdash_blocks + filler_blocks
 
     if all_blocks:
         parts = [f"AI Slop BLOCKED — {len(all_blocks)} pattern(s) in {os.path.basename(file_path)}:\n"]
