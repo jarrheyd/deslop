@@ -9,7 +9,7 @@ stopped: AI purple, the ChatGPT gradient, gradient text, glassmorphism, left-bor
 cards, the generic rgba(0,0,0,0.1) shadow, ultra-faint card outlines, decorative blur blobs,
 Inter-as-default, and overgradient.
 
-Everything here BLOCKS (Jarrhey, 2026-08-27: no warn tier). Bypass a session with DISABLE_ANTI_SLOP_HOOK=1.
+Everything here BLOCKS (2026-08-27: no warn tier). Bypass a session with DISABLE_ANTI_SLOP_HOOK=1.
 
 Exit codes: 0 = allow, 2 = block.
 """

@@ -143,7 +143,7 @@ Regex-caught by `hooks/design_slop_hook.py` are marked (hook); the rest need a r
 - Checkmark-bullet lists everywhere (judgment).
 - Animated arrows, gratuitous hover animations (judgment).
 
-## Slide-specific tells (Jarrhey, 2026-08-27 - do NOT do these in decks)
+## Slide-specific tells (2026-08-27 - do NOT do these in decks)
 
 - **No eyebrow / kicker** - the little label above a slide headline ("THE PROBLEM", "INTRODUCING X"). Delete it; the headline stands alone.
 - **No dash / rule at the top** of a slide as ornament.

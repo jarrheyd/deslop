@@ -16,7 +16,7 @@ Two checkers and a skill:
 2. **Design checker** (`hooks/design_slop_hook.py`) - reads HTML/CSS/JSX and blocks AI-default *visual* tells.
 3. **The skill** (`SKILL.md` + `references/` + `agents/`) - invoke it for a full manual review, with the pattern catalogs, a slop-detector agent, and a copy-humanizer agent.
 
-Both checkers are plain Python: they read a file and exit `0` (clean) or `2` (slop found). That makes them usable as an editor hook, a git pre-commit hook, a CI step, or a call from any agent. **Everything blocks** - there is no warn tier. Bypass a run with `DISABLE_ANTI_SLOP_HOOK=1`.
+Both checkers are plain Python: they read a file and exit `0` (clean) or `2` (slop found). That makes them usable as an editor hook, a git pre-commit hook, a CI step, or a call from any agent. **Everything blocks** - there is no warn tier. Bypass a run with `DISABLE_ANTI_SLOP_HOOK=1`, or exempt paths that repeat by design (state files, ledgers, generated output) with `DESLOP_SKIP_PATHS=_archive/,build/`.
 
 ### A sample of what's caught
 

@@ -59,6 +59,12 @@ SKIP_PATTERNS = [
     "build/",
 ]
 
+# Deployment-specific paths (a personal vault, a ledger dir, generated state) do not belong
+# in the shipped list. Set DESLOP_SKIP_PATHS to a comma-separated list to append your own.
+_extra_skips = os.environ.get("DESLOP_SKIP_PATHS", "")
+if _extra_skips:
+    SKIP_PATTERNS.extend(s.strip() for s in _extra_skips.split(",") if s.strip())
+
 # ============================================================
 # BANNED PHRASES (blocking — zero tolerance)
 # ============================================================
@@ -86,8 +92,8 @@ BANNED_PHRASES = [
     # Redundant verbs (AI padding)
     (r"(?i)\bserves\s+as\b", "banned phrase: 'serves as' — just say 'is'"),
 
-    # Jarrhey-banned words (flagged in live corrections)
-    (r"(?i)\bwhack[- ]?a[- ]?mole\b", "Jarrhey-banned: 'whack-a-mole' -- plain it out (e.g. 'each fix caused the next problem')"),
+    # Banned words (flagged in live corrections)
+    (r"(?i)\bwhack[- ]?a[- ]?mole\b", "banned: 'whack-a-mole' -- plain it out (e.g. 'each fix caused the next problem')"),
 
     # Sycophantic
     (r"(?i)^great\s+question!", "banned phrase: 'Great question!' — just answer it"),
@@ -174,7 +180,7 @@ FILLER_TRANSITIONS = [
 ]
 
 # ============================================================
-# BLOCKING: curly quotes, Title Case headings, bold overuse (added 2026-08-18, Jarrhey's call)
+# BLOCKING: curly quotes, Title Case headings, bold overuse (added 2026-08-18)
 # ============================================================
 
 CURLY_QUOTES = {"“", "”", "‘", "’"}  # " " ' '
@@ -184,6 +190,75 @@ CURLY_QUOTES = {"“", "”", "‘", "’"}  # " " ' '
 TITLE_CASE_SMALL = {
     "a", "an", "the", "and", "or", "nor", "but", "of", "to", "in", "on", "at",
     "by", "for", "with", "from", "as", "vs", "via", "into", "onto", "over",
+}
+
+# ============================================================
+# BLOCKING: explainer furniture in headings (added 2026-09-02)
+#
+# A title that names the thing, then glosses the ARTIFACT rather than the subject:
+# "The system, in two pictures". The gloss describes the format ("in two pictures",
+# "at a glance", "explained", "a primer") and carries no information the body does not.
+# Deliberately narrow: a plain comma in a heading is legitimate and common (dates,
+# "X, or Y?" decision framings), so only the gloss shapes below block.
+# ============================================================
+
+# Nouns that describe the ARTIFACT rather than the subject. "in three weeks" is a
+# schedule and stays legal; "in three charts" is a format gloss and blocks.
+FORMAT_NOUNS = (
+    r"pictures?|charts?|graphs?|images?|slides?|numbers?|words?|lines?|minutes?|"
+    r"steps?|bullets?|paragraphs?|tables?|screenshots?|diagrams?|acts?|parts?|points?"
+)
+
+EXPLAINER_HEADINGS = [
+    (r"(?i),\s+in\s+(?:a|an|one|two|three|four|five|six|seven|eight|nine|ten|\d+)\s+(?:" + FORMAT_NOUNS + r")\s*$",
+     "explainer gloss heading: ', in N <format>' - the title already names the thing; drop the gloss"),
+    (r"(?i),?\s+at\s+a\s+glance\s*$",
+     "explainer gloss heading: 'at a glance' - drop it; the content is the glance"),
+    (r"(?i),\s+explained\s*$",
+     "explainer suffix heading: ', explained' - the body is the explanation; drop the label"),
+    (r"(?i),\s+a\s+primer\s*$",
+     "explainer suffix heading: ', a primer' - drop it and name the subject"),
+    (r"(?i)^(?:a\s+)?primer\s+on\s+\S",
+     "explainer suffix heading: 'a primer on X' - just name X"),
+    (r"(?i)[a-z]\s+101\s*$",
+     "explainer suffix heading: 'X 101' - drop the 101; name what it covers"),
+    (r"(?i)^what\s+(?:this|that|it)\s+means\s+for\s+you\s*$",
+     "explainer heading: 'what this means for you' - say what it means in the body"),
+    (r"(?i),\s+and\s+wh(?:y|at)\s+it\s+(?:matters|means)\s*$",
+     "why-it-matters tail: ', and why it matters' - if it matters, the body shows it"),
+    (r"(?i)^why\s+it\s+matters\s*$",
+     "why-it-matters heading: state the stake itself, not that there is one"),
+]
+
+# ============================================================
+# BLOCKING: density (added 2026-09-02)
+#
+# Two mechanical forms of overexplaining. RESTATEMENT is the same point twice in a
+# row; THROAT-CLEARING is an abstract opener before any substance (dictionary calls
+# this "The Warm-Up Problem" - the first 40% of AI content).
+# ============================================================
+
+# Tuned against a 648-file corpus. Parallel enumeration (two ticket rows, ToS vs privacy
+# policy, "Sprint Planning" vs "Sprint Review") shares scaffolding and topped out at 0.83
+# overlap; genuine restatement reuses nearly every word and scores 0.9 to 1.0. Anything
+# below 0.9 blocked legitimate parallel lists, so 0.9 is the floor.
+#
+# Known limit: this catches near-verbatim repeats only. The synonym form ("The system is
+# fast." / "It is quick.") scores ~0.2 and is invisible here - that one stays a judgment
+# tell for the review gate.
+RESTATEMENT_MIN_CONTENT_WORDS = 5   # below this, overlap is noise
+RESTATEMENT_OVERLAP = 0.9           # share of the shorter unit's content words
+
+STOPWORDS = {
+    "a", "an", "the", "and", "or", "but", "if", "then", "than", "that", "this", "these",
+    "those", "is", "are", "was", "were", "be", "been", "being", "am", "do", "does", "did",
+    "have", "has", "had", "will", "would", "can", "could", "should", "may", "might", "must",
+    "of", "to", "in", "on", "at", "by", "for", "with", "from", "as", "into", "onto", "over",
+    "under", "about", "after", "before", "between", "through", "during", "without", "within",
+    "it", "its", "we", "our", "you", "your", "they", "their", "he", "she", "his", "her",
+    "not", "no", "so", "up", "out", "off", "down", "just", "only", "also", "more", "most",
+    "which", "what", "when", "where", "who", "whom", "how", "why", "there", "here", "all",
+    "any", "each", "both", "some", "such", "one", "two", "very", "much", "many", "still",
 }
 
 # WARN: wordy phrases, false ranges, AI disclaimers (from unslop merge, 2026-08-18).
@@ -199,7 +274,7 @@ WEAK_PHRASES = [
     (r"(?i)\beverything\s+from\s+\w+\s+to\s+\w+", "false range: 'everything from X to Y' -- list the real items or cut"),
     (r"(?i)\bbased\s+on\s+the\s+(?:information|data)\s+(?:provided|available)\b", "AI disclaimer: 'based on the information provided' -- just answer"),
     (r"(?i)\bit\s+appears\s+that\b", "hedge: 'it appears that' -- say what is, or name the uncertainty concretely"),
-    # --- unslop merge 2, added 2026-08-27 (Jarrhey): weak copulas, empty -ing tails, abstract jargon ---
+    # --- unslop merge 2, added 2026-08-27: weak copulas, empty -ing tails, abstract jargon ---
     (r"(?i)\b(?:serves|stands)\s+as\b", "weak copula: 'serves/stands as' -- just say what it is ('is', 'runs', 'handles')"),
     (r"(?i)\bboasts\b", "puffery verb: 'boasts' -- use a plain verb ('has', 'includes')"),
     (r"(?i),\s+(?:highlighting|showcasing|underscoring|emphasizing|reflecting|ensuring|demonstrating)\s+", "empty -ing tail: ', highlighting/ensuring...' -- start a new sentence with the concrete point"),
@@ -362,7 +437,7 @@ def check_weak_phrases(content):
 
 
 def check_curly_quotes(content):
-    """BLOCK: smart/curly quotes — Jarrhey writes straight ASCII."""
+    """BLOCK: smart/curly quotes - use straight ASCII."""
     violations = []
     for i, line in enumerate(content.split("\n"), 1):
         if any(c in line for c in CURLY_QUOTES):
@@ -402,7 +477,7 @@ def check_bold_overuse(content):
 
 
 def check_bold_lead_paragraph(content):
-    """BLOCK: the 'bold title. then body' paragraph tell (2026-08-28, Jarrhey).
+    """BLOCK: the 'bold title. then body' paragraph tell (2026-08-28).
     A bold fragment used as a sentence-title, period-terminated, then body prose in the
     same paragraph — e.g. '**Evidence boundary.** A format-valid timestamp confirms...'.
     Scoped to a PERIOD-terminated bold lead so it does NOT hit '**Label:** value' lines
@@ -423,7 +498,7 @@ def check_bold_lead_paragraph(content):
 
 
 def check_middot_separator(content):
-    """BLOCK: spaced middot separator ' · ' used as connective tissue (2026-08-28, Jarrhey).
+    """BLOCK: spaced middot separator ' · ' used as connective tissue (2026-08-28).
     An AI tell in copy ('Jan · Jul', 'DBM · Open Gov'). Use a plain word, comma, or line break."""
     violations = []
     for i, line in enumerate(content.split("\n"), 1):
@@ -441,6 +516,137 @@ def extract_content(tool_name, tool_input):
         edits = tool_input.get("edits", [])
         return "\n".join(edit.get("new_string", "") for edit in edits)
     return ""
+
+
+def _heading_texts(content):
+    """Yield (line_num, heading_text) for markdown # headings and HTML <h1-h6>."""
+    for i, line in enumerate(content.split("\n"), 1):
+        m = re.match(r"^\s*#{1,6}\s+(.+?)\s*$", line)
+        if m:
+            yield i, m.group(1).strip()
+            continue
+        for hm in re.finditer(r"(?is)<h[1-6][^>]*>(.*?)</h[1-6]>", line):
+            text = re.sub(r"(?s)<[^>]+>", "", hm.group(1))
+            text = html.unescape(text).strip()
+            if text:
+                yield i, text
+
+
+def check_explainer_headings(content):
+    """BLOCK: a heading that glosses the artifact instead of naming the subject."""
+    violations = []
+    for i, text in _heading_texts(content):
+        # Strip trailing markdown emphasis/punctuation that would hide an end anchor.
+        probe = text.rstrip("*_`#").rstrip()
+        for pattern, msg in EXPLAINER_HEADINGS:
+            if re.search(pattern, probe):
+                violations.append((i, f"[BLOCK] {msg}"))
+                break
+    return violations
+
+
+def _content_words(text):
+    """Lowercased meaningful tokens: drops stopwords, punctuation, and short words.
+
+    Numbers, dates and identifiers are KEPT and never length-filtered. Parallel rows in
+    a log or ledger share their scaffolding and differ only in the values ("Aug 20" vs
+    "Aug 22", one ticket key vs another); dropping those values made distinct entries
+    look identical and was the main source of false positives.
+    """
+    tokens = re.findall(r"[A-Za-z][A-Za-z'-]*|\d[\w.:/-]*", text.lower())
+    out = set()
+    for t in tokens:
+        if any(ch.isdigit() for ch in t):
+            out.add(t)
+        elif len(t) > 3 and t not in STOPWORDS:
+            out.add(t)
+    return out
+
+
+# A line carrying this many tags is markup, not prose. Minified HTML puts a whole
+# page on one line, and splitting that on sentence punctuation compares fragments of
+# markup rather than sentences.
+MARKUP_TAG_LIMIT = 3
+
+
+def _strip_code_and_tables(content):
+    """Drop fenced code blocks, markdown table rows, and markup-heavy lines.
+
+    All three repeat by design: a table restates its column shape every row, a code
+    block restates its idiom, and a minified HTML line is not prose at all.
+    """
+    out, in_fence = [], False
+    for line in content.split("\n"):
+        if line.lstrip().startswith("```"):
+            in_fence = not in_fence
+            out.append("")
+            continue
+        if in_fence or line.lstrip().startswith("|"):
+            out.append("")
+            continue
+        if len(re.findall(r"<[a-zA-Z/!][^>]*>", line)) >= MARKUP_TAG_LIMIT:
+            out.append("")
+            continue
+        out.append(line)
+    return "\n".join(out)
+
+
+def _split_sentences(text):
+    parts = re.split(r"(?<=[.!?])\s+", text.strip())
+    return [p.strip() for p in parts if p.strip()]
+
+
+def check_restatement(content):
+    """BLOCK: two adjacent sentences or bullets that make the same point twice.
+
+    Compares content-word sets. Adjacent only - a callback to something said three
+    paragraphs up is legitimate; the same point restated immediately is padding.
+    """
+    violations = []
+    cleaned = _strip_code_and_tables(content)
+    lines = cleaned.split("\n")
+
+    units = []  # (line_num, text)
+
+    # Adjacent bullets at the same nesting level.
+    run = []
+    for i, line in enumerate(lines, 1):
+        m = re.match(r"^(\s*)(?:[-*+]|\d+[.)])\s+(.+)", line)
+        if m:
+            indent = len(m.group(1))
+            if run and run[-1][0] == indent:
+                units.append((run[-1][1], run[-1][2], i, m.group(2)))
+            run = [(indent, i, m.group(2))]
+        elif line.strip():
+            run = []
+
+    for prev_line, prev_text, cur_line, cur_text in units:
+        a, b = _content_words(prev_text), _content_words(cur_text)
+        if len(a) < RESTATEMENT_MIN_CONTENT_WORDS or len(b) < RESTATEMENT_MIN_CONTENT_WORDS:
+            continue
+        overlap = len(a & b) / min(len(a), len(b))
+        if overlap >= RESTATEMENT_OVERLAP:
+            violations.append((cur_line, "[BLOCK] restatement: this bullet repeats the previous one's point - say it once"))
+
+    # Adjacent sentences inside a prose paragraph.
+    paragraphs = [p.strip() for p in re.split(r"\n\s*\n", cleaned) if p.strip()]
+    for para in paragraphs:
+        if para.startswith(("#", "-", "*", "`", "|", ">")):
+            continue
+        sentences = _split_sentences(para)
+        for s1, s2 in zip(sentences, sentences[1:]):
+            a, b = _content_words(s1), _content_words(s2)
+            if len(a) < RESTATEMENT_MIN_CONTENT_WORDS or len(b) < RESTATEMENT_MIN_CONTENT_WORDS:
+                continue
+            overlap = len(a & b) / min(len(a), len(b))
+            if overlap >= RESTATEMENT_OVERLAP:
+                line_no = 0
+                for i, line in enumerate(content.split("\n"), 1):
+                    if s2[:40] in line:
+                        line_no = i
+                        break
+                violations.append((line_no, "[BLOCK] restatement: this sentence repeats the previous one - delete it"))
+    return violations
 
 
 def main():
@@ -488,7 +694,9 @@ def main():
     bold = check_bold_overuse(content)
     boldlead = check_bold_lead_paragraph(content)
     middot = check_middot_separator(content)
-    # EVERYTHING BLOCKS (2026-08-27, Jarrhey: "everything should just block, no need for warn"). The former
+    explainer = check_explainer_headings(content)
+    restate = check_restatement(content)
+    # EVERYTHING BLOCKS (2026-08-27: "everything should just block, no need for warn"). The former
     # warn tier (density, em dash, filler transitions, weak copulas / -ing tails / wordy / false ranges) is now
     # blocking. Two deliberate calls: (1) the paragraph-uniformity heuristic is DROPPED, not promoted - blocking
     # a write because "paragraphs are similar length" false-positives on every structured doc. (2) em dashes now
@@ -500,7 +708,8 @@ def main():
     if EM_DASH in content:
         emdash_blocks = [(0, f"[BLOCK] em dash present ({content.count(EM_DASH)}x) - banned outright; use a hyphen, comma, or period")]
 
-    all_blocks = banned + curly + titlecase + bold + boldlead + middot + weak_blocks + density_blocks + emdash_blocks + filler_blocks
+    all_blocks = (banned + curly + titlecase + bold + boldlead + middot + explainer
+                  + restate + weak_blocks + density_blocks + emdash_blocks + filler_blocks)
 
     if all_blocks:
         parts = [f"AI Slop BLOCKED — {len(all_blocks)} pattern(s) in {os.path.basename(file_path)}:\n"]

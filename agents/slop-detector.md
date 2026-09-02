@@ -13,7 +13,27 @@ You are a content quality auditor. Your job is to analyze any content — copy, 
    - Video: `references/video-slop-tells.md`
    - Websites: `references/website-slop-formula.md`
 3. **Run the Universal Slop Test** (5 questions from SKILL.md)
-4. **Score and report**
+4. **Run the density pass** (below)
+5. **Score and report**
+
+## Density pass
+
+Volume is the tell the word lists miss. A document can contain no banned phrase and still
+be twice the length it needs. Check three things:
+
+1. **One idea per paragraph, in at most two sentences.** Flag any paragraph that takes more
+   than two sentences to land a single idea. The extra sentences are usually a restatement,
+   a why-it-matters preface, or a recap of the sentence above.
+2. **Restatement by synonym.** "The system is fast. It is quick." The hook catches
+   near-verbatim repeats only; the synonym form reuses almost no words and is invisible to
+   it, so it has to be caught by reading. If the second sentence adds no new fact, cut it.
+3. **Unranked points in an argument.** First decide which kind of document this is. An
+   INVENTORY (sweep, brief, roll-up, ledger) is exhaustive and flat by design, so do not
+   flag length or item count. A THESIS document (memo, proposal, decision doc) must make
+   its top three findable in the first screen; if every point sits at the same weight, flag
+   it and name the three that carry the decision.
+
+Report the current word count and the count after the cuts you are proposing.
 
 ## Output Format
 

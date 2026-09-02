@@ -39,8 +39,12 @@ The antidote is not "don't use AI." It's **specificity, intentionality, and huma
 | "Hits different" | The 2022 phrase that's now AI's favorite | **Block** |
 | "Operationalize" / "frameworks" / "moats" | Tech-bro abstraction words | **Warn** |
 | "It came back null" / "It came back X" | Passive AI-result-rhythm | **Warn** |
+| Explainer gloss headings | "The system, in two pictures", "Q3 at a glance", "X, explained", "X 101", "and why it matters" | **Block** |
+| Restatement | Two adjacent sentences or bullets that make the same point in nearly the same words | **Block** |
 
 Set `DISABLE_ANTI_SLOP_HOOK=1` to bypass.
+
+Set `DESLOP_SKIP_PATHS` to a comma-separated list of path fragments the hook should ignore, appended to the built-in skip list. Use it for content that repeats by design and is not authored prose: a personal vault's state files, a ledger directory, generated output. Example: `DESLOP_SKIP_PATHS=_archive/,_meta/ledger/`.
 
 **Artifact gate (`hooks/artifact_slop_hook.py`, added 2026-08-31).** The two hooks above only see local file writes, so a Google Doc / Slides / Sheet created straight through the Drive connector, or a published Artifact, used to slip past. This hook closes that gap: it fires on `Artifact` and any `mcp__*__create_file` / `mcp__*__update_file`, pulls the body out of `textContent` / `base64Content` / `html` (or the Artifact's `file_path`), and runs it back through the copy and design hooks. Any block there blocks the artifact. Binary uploads (image/pdf/font) and empty/native-shell creates are no-ops. Same `DISABLE_ANTI_SLOP_HOOK=1` bypass. Note: hooks load at session start, so it protects new sessions; mid-session, self-gate by running the checks before create_file.
 
@@ -52,17 +56,17 @@ Use `/deslop` or ask Claude to run a slop check on any content.
 
 The design-system and brand-system skills both reference this skill. Their workflows include an anti-slop check before shipping.
 
-## Jarrhey-observed tells (2026-07, from live draft-vs-sent corrections)
+## Field-observed tells (from live draft-vs-sent corrections)
 
-Patterns caught in real usage — his actual sent messages vs AI drafts. These outrank the generic lists when writing AS Jarrhey or FOR his review:
+Patterns caught in real usage, comparing AI drafts against what a human actually sent in the same thread. These outrank the generic lists when writing in someone's voice or for their review:
 
-1. **Em dashes: banned outright** in his output, not just "abuse at density." Inline separator is a plain hyphen " - ". (Global rule, all mediums.)
-2. **Over-committing language.** AI drafted "locked 300 characters"; he sent "Proposing 300." Drafts must never commit him (or Symph) harder than verified facts: cover what's agreed, ASK the clarifying question ("Are those the 2 sessions you meant?"), never blanket-approve money/scope.
-3. **Sectioned essays where numbered questions suffice.** His pushback is 2-3 numbered questions, not 4 headed sections. ALL-CAPS asterisk headers = tell; his real headers are bold sentence-case ("How we'll work"), and only when an email truly needs them.
-4. **Compression that drops substance.** Cutting a real point to be short is a loss (the dropped-signatories lesson). Target: his length, the draft's completeness.
-5. **Promise-language vs act-language.** AI writes "I'll loop in Flor"; he writes "I have already informed Flor." Act first, then reference the action.
+1. **Em dashes: banned outright**, not just "abuse at density." Inline separator is a plain hyphen " - ". (Global rule, all mediums.)
+2. **Over-committing language.** AI drafted "locked 300 characters"; he sent "Proposing 300." Drafts must never commit the author or their company harder than verified facts: cover what's agreed, ASK the clarifying question ("Are those the 2 sessions you meant?"), never blanket-approve money/scope.
+3. **Sectioned essays where numbered questions suffice.** Real pushback is 2-3 numbered questions, not 4 headed sections. ALL-CAPS asterisk headers = tell; real headers are bold sentence-case ("How we'll work"), and only when an email truly needs them.
+4. **Compression that drops substance.** Cutting a real point to be short is a loss (the dropped-signatories lesson). Target: the shorter length, the full set of points.
+5. **Promise-language vs act-language.** AI writes "I'll loop in Flor"; a human writes "I have already informed Flor." Act first, then reference the action.
 6. **Doom warnings and public assignments in client chat.** Strip alarmism; open questions and offers, not directives naming who must do what in front of the client.
-7. **Report verbosity.** Reports to him: fragments over grammar, no preamble, lead with the outcome. Repeating the ask back = slop.
+7. **Report verbosity.** Reports to a busy reader: fragments over grammar, no preamble, lead with the outcome. Repeating the ask back = slop.
 8. **Duplicate artifacts.** Revising by creating a second draft/file and leaving the old one = slop workflow. Revise in place, one clean artifact.
 9. **Fake completion language.** "Done/created/sent" without a tool having run. If you didn't see the tool response, it didn't happen.
 10. **Bold-lead paragraph (2026-08-28).** A bold fragment used as a pseudo-title, then body prose in the same paragraph -- "**Evidence boundary.** A format-valid timestamp confirms...". Classic AI carousel/marketing tell. Drop the bold pseudo-title; just write the sentence. (Enforced in the hook, period-terminated bold only, so legit `**Label:** value` lines still pass.)
@@ -70,15 +74,19 @@ Patterns caught in real usage — his actual sent messages vs AI drafts. These o
 12. **Carousel/slide furniture tells (2026-08-28).** Page-number dots ("1/10", pagination dots), upper-right kicker/eyebrow labels, and per-slide section titles all read as AI-generated deck slop. No page numbers, no eyebrow labels, no "The problem:" pseudo-headers -- let the headline carry the point.
 13. **Over-titling / over-repeating (2026-08-28).** Adding a label to a slide that the headline already says, repeating the same footer descriptor on every frame, or restating the credit line twice on one slide. Say it once, in one place.
 14. **Bar line under a heading (2026-08-31).** A colored horizontal rule under every section heading -- `h2{border-bottom:2px solid ...}` in CSS, an `<hr>`, or the `---` a heading border becomes when HTML converts to a Google Doc. Reads as AI section-divider furniture. Let the heading weight and the whitespace carry the break, no underline bar. (Enforced in `design_slop_hook.py`: h1-h6 with `border-bottom`, and decorative `<hr>`.)
+15. **Explainer furniture (2026-09-02).** A heading that names the thing, then glosses the artifact rather than the subject: "The system, in two pictures", "Q3 at a glance", "Kindred invites, explained", "Webhooks 101", "The margin gap, and why it matters". The gloss describes the format and carries nothing the body does not. Drop it and keep the subject. Also the footer caption that re-explains the slide above it. (Enforced in the hook, narrow shapes only: a plain comma in a heading is legitimate, and "X: what changed" is a scope narrower, not a gloss.)
+16. **Padding around points (2026-09-02).** The unit of cutting is the WORD, never the POINT. Half the words, all the points. A cut that removes a point is a loss, not a cut, and the point comes back at whatever length it needs. What is always free to cut: a sentence that restates the one before it, a why-it-matters preface, a format gloss, a closing recap of what was just said. All four are words with no point attached. This is the operating rule for tell #4, which governs what survives; this one governs how much room it gets.
+17. **Unranked points in an argument (2026-09-02).** Two document kinds, two rules. An INVENTORY (a sweep, a brief, a portfolio roll-up, a ledger) is exhaustive and flat by design: 30 items means 30 lines, and pre-filtering is the defect. A THESIS document (a memo, proposal, decision doc, recommendation) that reads flat has not done its work: 30 points means the argument has not been found yet. Fix by surfacing the 3 that carry the decision and demoting the rest, not by deleting them. The test is "does this document argue for something?"
 
 ## Post-implementation review gate (MANDATORY)
 
 After EVERY implementation — a feature, a document, a proposal, a design, copy, a UI — run this skill as a review BEFORE presenting the result:
 
 1. Sweep the deliverable's user-facing surfaces: copy/microcopy, docs, UI choices, generated designs, commit-adjacent prose.
-2. Apply the Universal Slop Test + the Jarrhey-observed tells above + the relevant domain reference.
-3. High-stakes (client-facing, published, in his voice) → full slop-detector agent pass.
-4. Violations get FIXED, then present — never presented with a "note: might be sloppy" caveat.
+2. Apply the Universal Slop Test + the field-observed tells above + the relevant domain reference.
+3. **Cut before presenting, silently.** Draft it, then cut to roughly half the words while keeping every point (tell #16). Present only the cut version. This step is never narrated, never shown as a before/after, and never mentioned. If a cut would remove a point, the point stays and the document is simply that long.
+4. High-stakes (client-facing, published, or written in someone's voice) → full slop-detector agent pass.
+5. Violations get FIXED, then present, never presented with a "note: might be sloppy" caveat.
 
 This gate is part of the global feature-development protocol (`~/.claude/CLAUDE.md`): audit → research → plan → implement → test → fix → **slop review** → done.
 
