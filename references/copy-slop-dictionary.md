@@ -141,6 +141,12 @@ amplify, boasts, cultivate, delineate, embody, emerge, empower, encompass, foste
 ### Pretentious Nouns
 advancement, aesthetic (as primary noun), authenticity (as primary noun), bastion, beacon, breakthrough, dynamics, endeavor, enhancement, enigma, ethos, exploration, gossamer, journey (metaphorical), labyrinth, metropolis (when not literal), possibilities (vague), remnant, tapestry, testament, vulnerability (when not literal), zeitgeist
 
+### Tech-Metaphor Nouns
+
+flywheel, moat, playbook, primitives, rail, rails, surface area
+
+Borrowed operator vocabulary. AI writes "the payment rail is what makes it pay" and "same playbook, worse outcome" where "GCash transfers are instant and irreversible" and "the same scam, run again" say more. Density-flagged, not banned: Rails is a real framework and a playbook is a real document. Name the mechanism instead of the metaphor.
+
 ### Filler Adjectives That Add Nothing
 authentic, bespoke, bustling, critical (without specifying critical to what), deep (metaphorical), daunting, dynamic (vague), essential, exciting (vague), innovative, informative, intrinsic, keen, renowned, robust, seamlessly, significant (without quantifying), tailored, vital
 

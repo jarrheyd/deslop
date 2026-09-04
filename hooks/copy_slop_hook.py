@@ -159,6 +159,10 @@ TIER2_WORDS = [
     "innovative", "vibrant", "profound", "ecosystem", "trajectory",
     "furthermore", "moreover", "consequently", "notably", "indeed",
     "additionally", "conversely", "nevertheless",
+    # Tech-metaphor nouns. AI reaches for these to sound operator-fluent.
+    # Density-flagged rather than banned: "rails" is also a real framework
+    # and a playbook is a real document.
+    "rails", "rail", "playbook", "flywheel", "moat", "primitives",
 ]
 TIER2_THRESHOLD = 2  # per 500 words
 
